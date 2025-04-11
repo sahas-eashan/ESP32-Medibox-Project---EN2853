@@ -48,9 +48,9 @@ The system provides a menu-driven interface with the following options:
 ## Project Structure
 medibox
 
-└── src
+  └── src
 
-└── main.cpp     # Main project file containing all the code
+  └── main.cpp     # Main project file containing all the code
 
 ## Project Status
 This project was developed as part of the EN2853: Embedded Systems and Applications Programming course assignment.
