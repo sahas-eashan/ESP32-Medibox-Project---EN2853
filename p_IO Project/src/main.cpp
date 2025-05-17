@@ -5,7 +5,8 @@
 #include <DHTesp.h>
 #include <WiFi.h>
 #include <time.h>
-
+#include <ESP32Servo.h>
+#include <PubSubClient.h>
 // Display and Pin Configurations
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -20,20 +21,32 @@
 #define PB_UP 33
 #define PB_DOWN 35
 #define DHTPIN 12
+#define SERVO_PIN 13
 
 #define NTP_SERVER "time.google.com"
 #define UTC_OFFSET_DST 0
+#define LDR_PIN 36 // analog pin
 
+char tempAr[6];
+// LDR Configuration
 // Global Variables
 int UTC_OFFSET = 0;
 int offset_hours = 0;
 int offset_mins = 0;
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 int days = 0;
 int hours = 0;
 int minutes = 0;
 int seconds = 0;
 String dayOfWeek = "";
+Servo shade_servo;
+
+float theta_offset = 30;
+float gammma = 0.75;
+float Tmed = 30.0;
 
 bool alarm_enabled = false;
 const int N_ALARMS = 3;
@@ -55,6 +68,16 @@ enum MenuState
   TIME_ZONE_SETTING,
   ALARM_SETTING
 };
+#define MAX_SAMPLES 100
+float ldr_readings[MAX_SAMPLES];
+int ldr_index = 0;
+int ldr_sample_count = 24;
+
+unsigned long lastLdrSample = 0;
+unsigned long lastLdrUpload = 0;
+int valid_sample_count = 0;
+int ts = 5;   // Sampling interval (seconds)
+int tu = 120; // Upload interval (seconds)
 
 const int MAX_VISIBLE_MENU_ITEMS = 3;
 const String MENU_ITEMS[] = {
@@ -94,7 +117,11 @@ void ring_alarm();
 void disable_all_alarms();
 void print_line(String text, int column, int row, int text_size);
 void check_temp();
-
+void sample_ldr();
+void reset_alarm_triggered();
+void update_servo_angle();
+void connectToBroker();
+void setupMqtt();
 /***************************************************************************************************
  * setup()
  * Initializes serial, pins, Wi-Fi, time, and OLED display.
@@ -110,8 +137,12 @@ void setup()
   pinMode(PB_OK, INPUT_PULLUP);
   pinMode(PB_UP, INPUT_PULLUP);
   pinMode(PB_DOWN, INPUT_PULLUP);
+  pinMode(LDR_PIN, INPUT);
 
   dhtSensor.setup(DHTPIN, DHTesp::DHT22);
+  shade_servo.attach(SERVO_PIN);
+  shade_servo.setPeriodHertz(50);           // Standard 50Hz for servos
+  shade_servo.attach(SERVO_PIN, 500, 2400); // Min and max pulse widths
 
   WiFi.begin("Wokwi-GUEST", "", 6);
   while (WiFi.status() != WL_CONNECTED)
@@ -164,7 +195,7 @@ void setup()
 
   display.clearDisplay();
   display.display();
-
+  setupMqtt();
   Serial.println("Setup complete!");
 }
 
@@ -174,7 +205,16 @@ void setup()
  **************************************************************************************************/
 void loop()
 {
+  if (!mqttClient.connected())
+  {
+    connectToBroker();
+  }
+  mqttClient.loop();
   update_time_with_check_alarm();
+
+  sample_ldr();
+  update_servo_angle();
+  mqttClient.publish("ENTC-ADMIN-TEMP", tempAr);
 
   if (digitalRead(PB_OK) == LOW)
   {
@@ -189,6 +229,7 @@ void loop()
   }
 
   check_temp();
+  Serial.println(tempAr);
 }
 
 /***************************************************************************************************
@@ -771,7 +812,7 @@ void check_temp()
   TempAndHumidity data = dhtSensor.getTempAndHumidity();
   float temperature = data.temperature;
   float humidity = data.humidity;
-
+  String(data.temperature, 2).toCharArray(tempAr, 6);
   const float MIN_TEMP = 26.0;
   const float MAX_TEMP = 32.0;
   const float MIN_HUM = 60.0;
@@ -837,6 +878,114 @@ void check_temp()
     if (currentState == HOME_SCREEN)
     {
       display_time();
+    }
+  }
+}
+
+/***************************************************************************************************
+ * void update_sampling_parameters(int new_ts, int new_tu)
+ * change sampling paramiters according to chnged tu and ts.
+ **************************************************************************************************/
+
+void update_sampling_parameters(int new_ts, int new_tu)
+{
+  ts = new_ts;
+  tu = new_tu;
+
+  ldr_sample_count = tu / ts;
+  if (ldr_sample_count > MAX_SAMPLES)
+  {
+    ldr_sample_count = MAX_SAMPLES; // prevent overflow
+  }
+
+  ldr_index = 0; // reset buffer position
+}
+
+/***************************************************************************************************
+ * float read_ldr_normalized()
+ * Reads the LDR value and normalizes it to a range of 0-1.
+ **************************************************************************************************/
+float read_ldr_normalized()
+{
+  int raw = analogRead(LDR_PIN);
+  return raw / 4095.0; // Normalize to 0-1
+}
+/***************************************************************************************************
+ * void sample_ldr()
+ * Samples the LDR value at regular intervals and stores it in a circular buffer.
+ **************************************************************************************************/
+void sample_ldr()
+{
+  if (millis() - lastLdrSample >= ts * 1000)
+  {
+    ldr_readings[ldr_index] = read_ldr_normalized();
+    Serial.print("LDR[");
+    Serial.print(ldr_index);
+    Serial.print("] = ");
+    Serial.println(ldr_readings[ldr_index], 4);
+
+    ldr_index = (ldr_index + 1) % ldr_sample_count;
+
+    if (valid_sample_count < ldr_sample_count)
+    {
+      valid_sample_count++;
+    }
+
+    lastLdrSample = millis();
+  }
+}
+/***************************************************************************************************
+ * float calculate_average_ldr()
+ * Calculates the average of the LDR readings stored in the circular buffer.loop
+ **************************************************************************************************/
+float calculate_average_ldr()
+{
+  if (valid_sample_count == 0)
+    return 0;
+
+  float sum = 0;
+  for (int i = 0; i < valid_sample_count; i++)
+  {
+    sum += ldr_readings[i];
+  }
+  return sum / valid_sample_count;
+}
+
+/***************************************************************************************************
+ * void update_servo_angle()
+ * Calculates the servo angle based on LDR readings and temperature, then updates the servo position.
+ **************************************************************************************************/
+void update_servo_angle()
+{
+  float I = calculate_average_ldr(); // 0 to 1
+  float T = dhtSensor.getTempAndHumidity().temperature;
+
+  float ratio = log((float)ts / tu);
+  float theta = theta_offset + (180 - theta_offset) * I * gammma * ratio * (T / Tmed); // corrected variable name
+
+  theta = constrain(theta, 0, 180); // safety
+  shade_servo.write((int)theta);
+}
+
+void setupMqtt()
+{
+  mqttClient.setServer("test.mosquitto.org", 1883);
+}
+void connectToBroker()
+{
+  while (!mqttClient.connected())
+  {
+    Serial.println("Attempting MQTT connetion");
+    if (mqttClient.connect("ESP32-75645365"))
+    {
+      Serial.println("connected");
+      // subscribe
+    }
+    else
+    {
+      Serial.print("failed");
+      Serial.println(mqttClient.state());
+      delay(5000);
     }
   }
 }
