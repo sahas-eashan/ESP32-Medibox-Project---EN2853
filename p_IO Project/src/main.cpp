@@ -122,6 +122,9 @@ void reset_alarm_triggered();
 void update_servo_angle();
 void connectToBroker();
 void setupMqtt();
+void receiveCallback(char *topic, byte *payload, unsigned int length);
+void publish_light_average();
+
 /***************************************************************************************************
  * setup()
  * Initializes serial, pins, Wi-Fi, time, and OLED display.
@@ -214,7 +217,6 @@ void loop()
 
   sample_ldr();
   update_servo_angle();
-  mqttClient.publish("ENTC-ADMIN-TEMP", tempAr);
 
   if (digitalRead(PB_OK) == LOW)
   {
@@ -229,7 +231,7 @@ void loop()
   }
 
   check_temp();
-  Serial.println(tempAr);
+  publish_light_average();
 }
 
 /***************************************************************************************************
@@ -813,6 +815,7 @@ void check_temp()
   float temperature = data.temperature;
   float humidity = data.humidity;
   String(data.temperature, 2).toCharArray(tempAr, 6);
+
   const float MIN_TEMP = 26.0;
   const float MAX_TEMP = 32.0;
   const float MIN_HUM = 60.0;
@@ -873,7 +876,7 @@ void check_temp()
       delay(200);
     }
 
-    delay(2000);
+    delay(1000);
 
     if (currentState == HOME_SCREEN)
     {
@@ -919,10 +922,10 @@ void sample_ldr()
   if (millis() - lastLdrSample >= ts * 1000)
   {
     ldr_readings[ldr_index] = read_ldr_normalized();
-    Serial.print("LDR[");
-    Serial.print(ldr_index);
-    Serial.print("] = ");
-    Serial.println(ldr_readings[ldr_index], 4);
+    // Serial.print("LDR[");
+    // Serial.print(ldr_index);
+    // Serial.print("] = ");
+    // Serial.println(ldr_readings[ldr_index], 4);
 
     ldr_index = (ldr_index + 1) % ldr_sample_count;
 
@@ -967,10 +970,70 @@ void update_servo_angle()
   shade_servo.write((int)theta);
 }
 
+/***************************************************************************************************
+ * void recieveCallback()
+ * Callback function for MQTT messages.
+ **************************************************************************************************/
+void recieveCallback(char *topic, byte *payload, unsigned int length)
+{
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+
+  char payloadCharAr[length + 1]; // +1 for null-terminator
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)payload[i]);
+    payloadCharAr[i] = (char)payload[i];
+  }
+  payloadCharAr[length] = '\0'; // Null-terminate the string
+
+  Serial.println();
+
+  if (strcmp(topic, "ENTC-ADMIN-MAIN-ON-OFF") == 0)
+  {
+    if (payloadCharAr[0] == '1')
+    {
+      Serial.println("Turning ON");
+      tone(BUZZER, 1000, 200);
+    }
+    else if (payloadCharAr[0] == '0')
+    {
+      Serial.println("Turning OFF");
+      noTone(BUZZER);
+    }
+  }
+  else if (strcmp(topic, "ENTC-ADMIN-LIGHT-Tu") == 0)
+  {
+    int new_tu = atoi(payloadCharAr);
+    update_sampling_parameters(ts, new_tu);
+    Serial.print("Updated tu = ");
+    Serial.println(new_tu);
+  }
+  else if (strcmp(topic, "ENTC-ADMIN-LIGHT-Ts") == 0)
+  {
+    int new_ts = atoi(payloadCharAr);
+    update_sampling_parameters(new_ts, tu);
+    Serial.print("Updated ts = ");
+    Serial.println(new_ts);
+  }
+}
+
+/***************************************************************************************************
+ * void setupMqtt()
+ * Sets up the MQTT client with the server and callback.
+ **************************************************************************************************/
+
 void setupMqtt()
 {
   mqttClient.setServer("test.mosquitto.org", 1883);
+  mqttClient.setCallback(recieveCallback);
 }
+
+/***************************************************************************************************
+ * void connectToBroker()
+ * Connects to the MQTT broker and subscribes to topics.
+ **************************************************************************************************/
 void connectToBroker()
 {
   while (!mqttClient.connected())
@@ -979,7 +1042,9 @@ void connectToBroker()
     if (mqttClient.connect("ESP32-75645365"))
     {
       Serial.println("connected");
-      // subscribe
+      mqttClient.subscribe("ENTC-ADMIN-MAIN-ON-OFF");
+      mqttClient.subscribe("ENTC-ADMIN-LIGHT-Tu");
+      mqttClient.subscribe("ENTC-ADMIN-LIGHT-Ts");
     }
     else
     {
@@ -988,4 +1053,18 @@ void connectToBroker()
       delay(5000);
     }
   }
+}
+
+/***************************************************************************************************
+ * void publish_light_average()
+ * Publishes the average LDR reading to the MQTT broker.
+ **************************************************************************************************/
+void publish_light_average()
+{
+  float avg = calculate_average_ldr();
+  char buffer[10];
+  dtostrf(avg, 4, 2, buffer);
+  mqttClient.publish("ENTC-ADMIN-LIGHT", buffer, true); // Retain = true
+  Serial.println(buffer);
+  lastLdrUpload = millis();
 }
