@@ -1,0 +1,610 @@
+[
+    {
+        "id": "3d79cb2537c9de6f",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2ec4d49af5f1b16f",
+        "type": "mqtt in",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "ENTC-ADMIN-LIGHT",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cd3fc9124d0bf700",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 140,
+        "y": 140,
+        "wires": [
+            [
+                "2b187dcf689d0be0",
+                "db3f203a6556b33d",
+                "f72f49889467fb74"
+            ]
+        ]
+    },
+    {
+        "id": "2b187dcf689d0be0",
+        "type": "ui_gauge",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "group": "61e8078d3be514a1",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "units",
+        "format": "{{payload}}",
+        "min": 0,
+        "max": "1",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": ".3",
+        "seg2": ".7",
+        "diff": false,
+        "className": "",
+        "x": 330,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "db3f203a6556b33d",
+        "type": "ui_chart",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "group": "61e8078d3be514a1",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "label": "chart",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 350,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "767af6ac1fb31f10",
+        "type": "ui_switch",
+        "z": "3d79cb2537c9de6f",
+        "name": "Main Switch ",
+        "label": "switch",
+        "tooltip": "",
+        "group": "ca7f69b31543cd26",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "topic",
+        "topicType": "str",
+        "style": "",
+        "onvalue": "1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": false,
+        "className": "",
+        "x": 90,
+        "y": 40,
+        "wires": [
+            [
+                "a30ed234d0c4a89f"
+            ]
+        ]
+    },
+    {
+        "id": "a30ed234d0c4a89f",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "ENTC-ADMIN-MAIN-ON-OFF",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 390,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "3775160cd2cd510a",
+        "type": "ui_slider",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "label": "Upload Interval (s)",
+        "tooltip": "",
+        "group": "61e8078d3be514a1",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "300",
+        "step": "30",
+        "className": "",
+        "x": 150,
+        "y": 280,
+        "wires": [
+            [
+                "82a3b3d333e81971"
+            ]
+        ]
+    },
+    {
+        "id": "f9bf2e3cfe12a944",
+        "type": "ui_slider",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "label": "Sampling Interval (s)",
+        "tooltip": "",
+        "group": "61e8078d3be514a1",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "30",
+        "step": 1,
+        "className": "",
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "c8da23a46afb4464"
+            ]
+        ]
+    },
+    {
+        "id": "5639e5832ce0b320",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "ENTC-ADMIN-LIGHT-Tu",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 630,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "82a3b3d333e81971",
+        "type": "change",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "tu",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 280,
+        "wires": [
+            [
+                "5639e5832ce0b320"
+            ]
+        ]
+    },
+    {
+        "id": "c8da23a46afb4464",
+        "type": "change",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "ts",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 340,
+        "wires": [
+            [
+                "93c29a6ae5736c54"
+            ]
+        ]
+    },
+    {
+        "id": "93c29a6ae5736c54",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "ENTC-ADMIN-LIGHT-Ts",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 630,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "f72f49889467fb74",
+        "type": "ui_text",
+        "z": "3d79cb2537c9de6f",
+        "group": "61e8078d3be514a1",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": " light intensity",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 410,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "197989c905305190",
+        "type": "ui_slider",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "label": "theta_offset",
+        "tooltip": "",
+        "group": "2d6c059c678b3e4a",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "120",
+        "step": 1,
+        "className": "",
+        "x": 110,
+        "y": 420,
+        "wires": [
+            [
+                "ef0207e098e1948e"
+            ]
+        ]
+    },
+    {
+        "id": "14debe39b6290c04",
+        "type": "ui_slider",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "label": "gamma",
+        "tooltip": "",
+        "group": "2d6c059c678b3e4a",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "1",
+        "step": "0.01",
+        "className": "",
+        "x": 100,
+        "y": 480,
+        "wires": [
+            [
+                "51ebca2ff9bbe568"
+            ]
+        ]
+    },
+    {
+        "id": "46aac83db01c9b77",
+        "type": "ui_slider",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "label": "Tmed",
+        "tooltip": "",
+        "group": "2d6c059c678b3e4a",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "10",
+        "max": "40",
+        "step": 1,
+        "className": "",
+        "x": 90,
+        "y": 540,
+        "wires": [
+            [
+                "a6cb0e06c1c9c331"
+            ]
+        ]
+    },
+    {
+        "id": "ef0207e098e1948e",
+        "type": "change",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "theta_offset",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 420,
+        "wires": [
+            [
+                "99598aa02c0c4128"
+            ]
+        ]
+    },
+    {
+        "id": "51ebca2ff9bbe568",
+        "type": "change",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "gamma",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 480,
+        "wires": [
+            [
+                "e3e3b3981fb23623"
+            ]
+        ]
+    },
+    {
+        "id": "a6cb0e06c1c9c331",
+        "type": "change",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "tmed",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 540,
+        "wires": [
+            [
+                "4acd6a3a594bb9ef"
+            ]
+        ]
+    },
+    {
+        "id": "99598aa02c0c4128",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "medibox/theta_offset",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 560,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "e3e3b3981fb23623",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "medibox/gamma",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 550,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "4acd6a3a594bb9ef",
+        "type": "mqtt out",
+        "z": "3d79cb2537c9de6f",
+        "name": "",
+        "topic": "medibox/tmed",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd3fc9124d0bf700",
+        "x": 540,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "cd3fc9124d0bf700",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "https://test.mosquitto.org/",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "61e8078d3be514a1",
+        "type": "ui_group",
+        "name": "Light Monitoring",
+        "tab": "7eb8f311768645c2",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ca7f69b31543cd26",
+        "type": "ui_group",
+        "name": "Main switch",
+        "tab": "7eb8f311768645c2",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2d6c059c678b3e4a",
+        "type": "ui_group",
+        "name": "Medicine requirements",
+        "tab": "7eb8f311768645c2",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7eb8f311768645c2",
+        "type": "ui_tab",
+        "name": "Medibox",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
