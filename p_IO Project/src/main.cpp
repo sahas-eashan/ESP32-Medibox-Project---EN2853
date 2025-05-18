@@ -1017,6 +1017,24 @@ void recieveCallback(char *topic, byte *payload, unsigned int length)
     Serial.print("Updated ts = ");
     Serial.println(new_ts);
   }
+  else if (strcmp(topic, "medibox/theta_offset") == 0)
+  {
+    theta_offset = atof(payloadCharAr);
+    Serial.print("Updated theta_offset: ");
+    Serial.println(theta_offset);
+  }
+  else if (strcmp(topic, "medibox/gamma") == 0)
+  {
+    gammma = atof(payloadCharAr);
+    Serial.print("Updated gamma: ");
+    Serial.println(gammma);
+  }
+  else if (strcmp(topic, "medibox/tmed") == 0)
+  {
+    Tmed = atof(payloadCharAr);
+    Serial.print("Updated Tmed: ");
+    Serial.println(Tmed);
+  }
 }
 
 /***************************************************************************************************
@@ -1045,6 +1063,9 @@ void connectToBroker()
       mqttClient.subscribe("ENTC-ADMIN-MAIN-ON-OFF");
       mqttClient.subscribe("ENTC-ADMIN-LIGHT-Tu");
       mqttClient.subscribe("ENTC-ADMIN-LIGHT-Ts");
+      mqttClient.subscribe("medibox/theta_offset");
+      mqttClient.subscribe("medibox/gamma");
+      mqttClient.subscribe("medibox/tmed");
     }
     else
     {
